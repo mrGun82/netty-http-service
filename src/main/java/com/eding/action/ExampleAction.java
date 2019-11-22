@@ -10,6 +10,14 @@ import com.eding.exceptions.Result;
  * @description:
  * @author:jiagang
  * @create 2019-11-22 15:59
+ * {
+ * 	"action":"example.test2",
+ * 	"parameter":{
+ * 		"one":"1",
+ * 		"two":"2",
+ * 		"three":"3"
+ *        }
+ * }
  */
 @ED("example")
 public class ExampleAction {
