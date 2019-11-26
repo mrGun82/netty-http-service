@@ -1,5 +1,7 @@
 package com.eding.skelecton.action;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.net.JarURLConnection;
@@ -13,6 +15,7 @@ import java.util.jar.JarEntry;
  * @author:jiagang
  * @create 2019-11-22 14:13
  */
+@Slf4j
 public abstract class ComponentScanner {
 
     public ComponentScanner() {
@@ -23,23 +26,19 @@ public abstract class ComponentScanner {
     }
 
     public void scanPackage(String packageName) throws Exception {
-        // 包名->路径名
         String packagePath = packageName.replace(".", "/");
-
+        log.info("scan package path: " + packagePath);
         try {
-            // 类加载器->URL枚举
             Enumeration<URL> resources = Thread.currentThread()
                     .getContextClassLoader()
                     .getResources(packagePath);
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
-                // 处理jar包
                 if (url.getProtocol().equals("jar")) {
                     parse(url);
                 } else {
                     File file = new File(url.toURI());
                     if (file.exists()) {
-                        // 处理包
                         parse(file, packageName);
                     }
                 }

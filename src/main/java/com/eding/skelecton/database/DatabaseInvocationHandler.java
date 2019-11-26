@@ -3,15 +3,14 @@ package com.eding.skelecton.database;
 import com.eding.skelecton.database.annotations.ExtInsert;
 import com.eding.skelecton.database.annotations.ExtParam;
 import com.eding.skelecton.database.annotations.ExtSelect;
+import com.eding.skelecton.database.annotations.ExtSelectOne;
 import com.google.common.collect.Lists;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -30,14 +29,22 @@ public class DatabaseInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
         ExtInsert extInsert = method.getAnnotation(ExtInsert.class);
         if (extInsert != null) {
             return insertSQL(extInsert, method, args);
         }
+
+        ExtSelectOne extSelectOne = method.getAnnotation(ExtSelectOne.class);
+        if (extSelectOne != null) {
+            return selectOne(extSelectOne, method, args);
+        }
+
         ExtSelect extSelect = method.getAnnotation(ExtSelect.class);
         if (extSelect != null) {
             return select(extSelect, method, args);
         }
+
         return null;
     }
 
@@ -60,9 +67,52 @@ public class DatabaseInvocationHandler implements InvocationHandler {
         return insertResult;
     }
 
-    public Object select(ExtSelect extInsert, Method method, Object[] args) throws SQLException {
+    public Object select(ExtSelect extSelect, Method method, Object[] args) throws Exception {
+        String selectSQL = extSelect.value();
+        Parameter[] parameters = method.getParameters();
+        ConcurrentHashMap<Object, Object> parameterMap = getExtParams(parameters, args);
+        List<String> sqlSelectParameter = SQLUtils.sqlSelectParameter(selectSQL);
+        List<Object> parameValues = Lists.newArrayList();
+        for (int i = 0; i < sqlSelectParameter.size(); i++) {
+            String parameterName = sqlSelectParameter.get(i);
+            Object object = parameterMap.get(parameterName);
+            if (Objects.isNull(object)) {
+                throw new IllegalArgumentException("无法获取SQL参数: " + parameterName);
+            }
+            parameValues.add(object.toString());
+        }
+        String newSql = SQLUtils.parameQuestion(selectSQL, sqlSelectParameter);
+        System.out.println("执行SQL:" + newSql + "参数信息:" + parameValues.toString());
+        ResultSet rs = JDBCOperator.getInstance().query(newSql, parameValues);
+
+        Type type = method.getGenericReturnType();
+        Type[] typesto = ((ParameterizedType) type).getActualTypeArguments();
+
+        Class genericSuperclass = Class.forName(typesto[0].getTypeName());
+        if (!rs.next()) {
+            return null;
+        }
+        // 还原游标
+        rs.previous();
+        // 实例化对象
+        List<String> sqlSelectColumn = SQLUtils.sqlSelectColumn(newSql);
+        List list = Lists.newArrayList();
+        while (rs.next()) {
+            Object newInstance = genericSuperclass.newInstance();
+            for (String parameterName : sqlSelectColumn) {
+                Object value = rs.getObject(parameterName);
+                Field field = genericSuperclass.getDeclaredField(parameterName);
+                field.setAccessible(true);
+                field.set(newInstance, value);
+            }
+            list.add(newInstance);
+        }
+        return list;
+    }
+
+    public Object selectOne(ExtSelectOne extSelectOne, Method method, Object[] args) throws SQLException {
         try {
-            String selectSQL = extInsert.value();
+            String selectSQL = extSelectOne.value();
             Parameter[] parameters = method.getParameters();
             ConcurrentHashMap<Object, Object> parameterMap = getExtParams(parameters, args);
             List<String> sqlSelectParameter = SQLUtils.sqlSelectParameter(selectSQL);
@@ -70,6 +120,9 @@ public class DatabaseInvocationHandler implements InvocationHandler {
             for (int i = 0; i < sqlSelectParameter.size(); i++) {
                 String parameterName = sqlSelectParameter.get(i);
                 Object object = parameterMap.get(parameterName);
+                if (Objects.isNull(object)) {
+                    throw new IllegalArgumentException("无法获取SQL参数: " + parameterName);
+                }
                 parameValues.add(object.toString());
             }
             String newSql = SQLUtils.parameQuestion(selectSQL, sqlSelectParameter);

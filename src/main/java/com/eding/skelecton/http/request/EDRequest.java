@@ -1,4 +1,4 @@
-package com.eding.http.request;
+package com.eding.skelecton.http.request;
 
 import lombok.Data;
 

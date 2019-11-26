@@ -1,4 +1,4 @@
-package com.eding.model;
+package com.eding.example.model;
 
 import lombok.Data;
 import lombok.ToString;

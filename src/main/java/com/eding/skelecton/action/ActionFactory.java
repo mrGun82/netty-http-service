@@ -7,6 +7,7 @@ import com.eding.annotations.EDParameter;
 import com.eding.exceptions.ActionHasDefineException;
 import com.eding.exceptions.MethodParameterNotDefineException;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -21,6 +22,7 @@ import java.util.Objects;
  * @author:jiagang
  * @create 2019-11-22 13:55
  */
+@Slf4j
 public class ActionFactory {
     private static final Map<String, ActionDefination> actionDefinations = Maps.newConcurrentMap();
     private static final ActionFactory actionFactory = new ActionFactory();
@@ -36,8 +38,8 @@ public class ActionFactory {
         scanAction(clazz.getPackage().getName());
     }
 
-    //  通过包名称，扫描其下所有文件
     public void scanAction(String packageName) throws Exception {
+        log.info("Starting scan");
         new ComponentScanner() {
             @Override
             public void dealClass(Class<?> clazz) throws Exception {
@@ -45,21 +47,21 @@ public class ActionFactory {
                     return;
                 }
                 Object object = clazz.newInstance();
+                log.info("scan component: " + clazz.getAnnotation(EDComponent.class).value());
                 scanMethod(clazz, object);
             }
         }.scanPackage(packageName);
+        log.info("finish scan");
     }
 
-    // 通过对象，扫描其所有方法
     public void scanAction(Object object) throws Exception {
         scanMethod(object.getClass(), object);
     }
 
     private void scanMethod(Class<?> clazz, Object object) throws Exception {
-        // 获取所有方法
+
         Method[] methods = clazz.getDeclaredMethods();
 
-        // 遍历所有方法，找到带有EDAction注解，并得到action
         for (Method method : methods) {
             if (!method.isAnnotationPresent(EDAction.class)) {
                 continue;
@@ -67,12 +69,10 @@ public class ActionFactory {
             EDAction edAction = method.getAnnotation(EDAction.class);
             String action = edAction.action();
 
-            // action是否已经定义
             if (actionDefinations.get(action) != null) {
                 throw new ActionHasDefineException("方法" + action + "已定义！");
             }
-
-            // 得到所有参数，并判断参数是否满足要求
+            log.info("scan action: " + action);
             Parameter[] parameters = method.getParameters();
             List<Parameter> parameterList = new ArrayList<Parameter>();
             for (int i = 0; i < parameters.length; i++) {
@@ -81,10 +81,11 @@ public class ActionFactory {
                     throw new MethodParameterNotDefineException("第" + (i + 1) + "个参数未定义！");
                 }
                 parameterList.add(parameter);
+                log.info(action + " action add parameter: " + parameter.getAnnotation(EDParameter.class).name());
             }
-            // 将得到的结果添加到map中
             addActionDefination(action, clazz, object, method, parameterList);
         }
+
     }
 
     private void addActionDefination(String action, Class<?> clazz, Object object, Method method, List<Parameter> parameterList) {
@@ -94,6 +95,7 @@ public class ActionFactory {
         }
         EDComponent ed = clazz.getAnnotation(EDComponent.class);
         actionDefinations.put(ed.value() + "." + action, actionDefination);
+        log.info("put action [" + ed.value() + "." + action + "] to actionDefinations");
     }
 
     protected ActionDefination getActionDefination(String action) {

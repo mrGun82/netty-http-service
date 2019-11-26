@@ -1,9 +1,9 @@
-package com.eding.http;
+package com.eding.skelecton.http.server;
 
 import com.eding.exceptions.GlobalExceptionHandler;
 import com.eding.exceptions.HttpMethodNotSupportedException;
 import com.eding.exceptions.Result;
-import com.eding.http.request.EDRequest;
+import com.eding.skelecton.http.request.EDRequest;
 import com.eding.skelecton.action.ActionProxy;
 import com.eding.skelecton.action.ParameterMaker;
 import com.google.common.collect.Maps;
@@ -16,8 +16,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,6 +27,7 @@ import java.util.Objects;
  * @author:jiagang
  * @create 2019-11-22 10:19
  */
+@Slf4j
 public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
 
     private FullHttpRequest request;
@@ -49,8 +50,8 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
                     decoder.parameters().entrySet().forEach(entry -> {
                         queryParmMap.put(entry.getKey(), entry.getValue().get(0));
                     });
-                } else if (HttpMethod.POST == method) {}
-                else {
+                } else if (HttpMethod.POST == method) {
+                } else {
                     throw new HttpMethodNotSupportedException();
                 }
 
@@ -66,7 +67,6 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
 
                 if (Objects.nonNull(paramMap)) {
                     for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
-                        System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                         parameterMaker.add(entry.getKey(), entry.getValue());
                     }
                 }
@@ -86,18 +86,12 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void writeResult(ChannelHandlerContext ctx, Result result, HttpResponseStatus status) throws UnsupportedEncodingException {
+    private void writeResult(ChannelHandlerContext ctx, Result result, HttpResponseStatus status) {
         String resultString = gson.toJson(result);
         writeResult(ctx, resultString, status);
     }
 
     private void writeResult(ChannelHandlerContext ctx, String result, HttpResponseStatus status) {
-
-//        FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-//                HttpResponseStatus.OK,
-//                Unpooled.copiedBuffer(result, CharsetUtil.UTF_8));
-//        resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
-//        ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer(result, CharsetUtil.UTF_8));
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON)
@@ -117,10 +111,10 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.close();
     }
+
 //    @Override
 //    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-//        System.out.println("连接的客户端地址:" + ctx.channel().remoteAddress());
-//        ctx.writeAndFlush("客户端"+ InetAddress.getLocalHost().getHostName() + "成功与服务端建立连接！ ");
+//        log.info("连接的客户端地址:" + ctx.channel().remoteAddress());
 //        super.channelActive(ctx);
 //    }
 }

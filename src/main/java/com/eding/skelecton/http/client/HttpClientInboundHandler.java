@@ -1,4 +1,4 @@
-package com.eding.http.client;
+package com.eding.skelecton.http.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
