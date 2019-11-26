@@ -11,7 +11,7 @@ import java.util.Map;
  * @create 2019-11-22 15:54
  */
 @Data
-public class Request {
+public class EDRequest {
     private String action;
     private Map<String,Object> parameter;
 }

@@ -1,7 +1,7 @@
-package com.eding.scanner;
+package com.eding.skelecton.action;
 
 
-import com.eding.annotations.ED;
+import com.eding.annotations.EDComponent;
 import com.eding.annotations.EDAction;
 import com.eding.annotations.EDParameter;
 import com.eding.exceptions.ActionHasDefineException;
@@ -38,39 +38,28 @@ public class ActionFactory {
 
     //  通过包名称，扫描其下所有文件
     public void scanAction(String packageName) throws Exception {
-        new ActionScanner() {
+        new ComponentScanner() {
             @Override
             public void dealClass(Class<?> clazz) throws Exception {
-                // 处理带有ED注解的类
-                if (!clazz.isAnnotationPresent(ED.class)) {
+                if (!clazz.isAnnotationPresent(EDComponent.class)) {
                     return;
                 }
-                try {
-                    Object object = clazz.newInstance();
-                    scanMethod(clazz, object);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
-                }
+                Object object = clazz.newInstance();
+                scanMethod(clazz, object);
             }
         }.scanPackage(packageName);
     }
 
     // 通过对象，扫描其所有方法
     public void scanAction(Object object) throws Exception {
-        try {
-            scanMethod(object.getClass(), object);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        scanMethod(object.getClass(), object);
     }
 
     private void scanMethod(Class<?> clazz, Object object) throws Exception {
         // 获取所有方法
         Method[] methods = clazz.getDeclaredMethods();
 
-        // 遍历所有方法，找到带有Action注解的方法，并得到action的值
+        // 遍历所有方法，找到带有EDAction注解，并得到action
         for (Method method : methods) {
             if (!method.isAnnotationPresent(EDAction.class)) {
                 continue;
@@ -103,7 +92,7 @@ public class ActionFactory {
         if (Objects.nonNull(actionDefinations.get(action))) {
             throw new RuntimeException("action :" + action + " 已存在!");
         }
-        ED ed = clazz.getAnnotation(ED.class);
+        EDComponent ed = clazz.getAnnotation(EDComponent.class);
         actionDefinations.put(ed.value() + "." + action, actionDefination);
     }
 

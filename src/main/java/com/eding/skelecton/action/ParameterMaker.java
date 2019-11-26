@@ -1,4 +1,4 @@
-package com.eding.scanner;
+package com.eding.skelecton.action;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,10 +1,8 @@
-package com.eding.scanner;
+package com.eding.skelecton.action;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.net.JarURLConnection;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
@@ -15,22 +13,21 @@ import java.util.jar.JarEntry;
  * @author:jiagang
  * @create 2019-11-22 14:13
  */
-public abstract class ActionScanner {
+public abstract class ComponentScanner {
 
-    public ActionScanner() {
+    public ComponentScanner() {
     }
 
-    // scanPackage方法的重载
     public void scanPackage(Class<?> clazz) throws Exception {
         scanPackage(clazz.getPackage().getName());
     }
 
     public void scanPackage(String packageName) throws Exception {
-        // 包名称转换为路径名
+        // 包名->路径名
         String packagePath = packageName.replace(".", "/");
 
         try {
-            // 类加载器得到URL的枚举
+            // 类加载器->URL枚举
             Enumeration<URL> resources = Thread.currentThread()
                     .getContextClassLoader()
                     .getResources(packagePath);
@@ -92,7 +89,7 @@ public abstract class ActionScanner {
         }
     }
 
-    // 将找到的class文件生成类对象
+    // class->对象
     private void dealClassName(String className) throws Exception {
         try {
             Class<?> clazz = Class.forName(className);

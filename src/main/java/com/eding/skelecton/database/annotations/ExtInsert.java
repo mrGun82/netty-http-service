@@ -1,4 +1,4 @@
-package com.eding.annotations;
+package com.eding.skelecton.database.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ED {
+@Target(ElementType.METHOD)
+public @interface ExtInsert {
     String value();
 }

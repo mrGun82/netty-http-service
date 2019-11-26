@@ -14,14 +14,11 @@ public class GlobalExceptionHandler {
             return Result.error(EDResultEnum.ERROR_IO);
         } else if (ex instanceof ActionNotDefineException) {
             return Result.error(EDResultEnum.ERROR_MOTHODNOTSUPPORT);
+        } else if (ex instanceof HttpMethodNotSupportedException) {
+            return Result.error(EDResultEnum.ERROR_HTTP_METHOD_NOT_SUPPORTED);
         } else if (ex instanceof MethodParameterNotMatchException) {
             return Result.error(EDResultEnum.ERROR_PARAMETER_NOT_MATCH);
-        }
-
-
-
-
-        else if (ex instanceof RuntimeException) {
+        } else if (ex instanceof RuntimeException) {
             return Result.error(EDResultEnum.ERROR_RUNTION);
         }
         return Result.error(EDResultEnum.FAILED);

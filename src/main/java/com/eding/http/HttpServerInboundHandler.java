@@ -1,15 +1,17 @@
 package com.eding.http;
 
 import com.eding.exceptions.GlobalExceptionHandler;
+import com.eding.exceptions.HttpMethodNotSupportedException;
 import com.eding.exceptions.Result;
-import com.eding.http.request.Request;
-import com.eding.scanner.ActionProxy;
-import com.eding.scanner.ParameterMaker;
-import com.google.common.base.Charsets;
+import com.eding.http.request.EDRequest;
+import com.eding.skelecton.action.ActionProxy;
+import com.eding.skelecton.action.ParameterMaker;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
@@ -19,8 +21,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-
 /**
  * @program:eding-cloud
  * @description:
@@ -29,7 +29,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private HttpRequest httpRequest;
+    private FullHttpRequest request;
     private Gson gson;
 
     public HttpServerInboundHandler() {
@@ -39,65 +39,72 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            if (msg instanceof HttpRequest) {
-                httpRequest = (HttpRequest) msg;
-                String uri = httpRequest.uri();
-            }
-            if (msg instanceof HttpContent) {
-                HttpContent content = (HttpContent) msg;
-                ByteBuf buf = content.content();
-                Request request = gson.fromJson(buf.toString(CharsetUtil.UTF_8), Request.class);
+            if (msg instanceof FullHttpRequest) {
+                request = (FullHttpRequest) msg;
+                HttpMethod method = request.method();
+                Map<String, String> queryParmMap = Maps.newHashMap();
+
+                if (HttpMethod.GET == method) {
+                    QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+                    decoder.parameters().entrySet().forEach(entry -> {
+                        queryParmMap.put(entry.getKey(), entry.getValue().get(0));
+                    });
+                } else if (HttpMethod.POST == method) {}
+                else {
+                    throw new HttpMethodNotSupportedException();
+                }
+
+                ByteBuf buf = request.content();
+                EDRequest edRequest = gson.fromJson(buf.toString(CharsetUtil.UTF_8), EDRequest.class);
                 ActionProxy proxy = new ActionProxy();
-                buf.release();
                 ParameterMaker parameterMaker = new ParameterMaker();
-                Map<String, Object> ParamMap = request.getParameter();
-                if (Objects.nonNull(request.getParameter())) {
-                    for (Map.Entry<String, Object> entry : ParamMap.entrySet()) {
+                Map<String, Object> paramMap = edRequest.getParameter();
+
+                if (Objects.nonNull(queryParmMap) && queryParmMap.size() > 0) {
+                    paramMap.putAll(queryParmMap);
+                }
+
+                if (Objects.nonNull(paramMap)) {
+                    for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
                         System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                         parameterMaker.add(entry.getKey(), entry.getValue());
                     }
                 }
-                String result = proxy.doRequest(request.getAction(), parameterMaker.toOgnl());
-                writeResult(ctx, result);
-            }
-            if(msg instanceof FullHttpRequest){
-                FullHttpRequest req = (FullHttpRequest)msg;
-// 1.获取URI
-                String uri = req.uri();
 
-                // 2.获取请求体
-                ByteBuf buf = req.content();
-                String content = buf.toString(CharsetUtil.UTF_8);
-
-                // 3.获取请求方法
-                HttpMethod method = req.method();
-
-                // 4.获取请求头
-                HttpHeaders headers = req.headers();
-
-
+                String result = proxy.doRequest(edRequest.getAction(), parameterMaker.toOgnl());
+                writeResult(ctx, result, HttpResponseStatus.OK);
+                return;
+            } else {
+                throw new HttpMethodNotSupportedException();
             }
         } catch (Exception e) {
             e.printStackTrace();
             Result result = new GlobalExceptionHandler().exceptionHandler(e);
-            writeResult(ctx, result);
+            writeResult(ctx, result, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            request.release();
         }
     }
 
-    private void writeResult(ChannelHandlerContext ctx, Result result) throws UnsupportedEncodingException {
+    private void writeResult(ChannelHandlerContext ctx, Result result, HttpResponseStatus status) throws UnsupportedEncodingException {
         String resultString = gson.toJson(result);
-        writeResult(ctx, resultString);
+        writeResult(ctx, resultString, status);
     }
 
-    private void writeResult(ChannelHandlerContext ctx, String result) throws UnsupportedEncodingException {
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(result.getBytes(Charsets.UTF_8)));
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON);
-        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-        if (HttpUtil.isKeepAlive(httpRequest)) {
-            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-        }
-        ctx.write(response);
-        ctx.flush();
+    private void writeResult(ChannelHandlerContext ctx, String result, HttpResponseStatus status) {
+
+//        FullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+//                HttpResponseStatus.OK,
+//                Unpooled.copiedBuffer(result, CharsetUtil.UTF_8));
+//        resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
+//        ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.copiedBuffer(result, CharsetUtil.UTF_8));
+        response.headers()
+                .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON)
+                .set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
+        ctx
+                .writeAndFlush(response)
+                .addListener(ChannelFutureListener.CLOSE);
     }
 
 
@@ -110,5 +117,10 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.close();
     }
-
+//    @Override
+//    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+//        System.out.println("连接的客户端地址:" + ctx.channel().remoteAddress());
+//        ctx.writeAndFlush("客户端"+ InetAddress.getLocalHost().getHostName() + "成功与服务端建立连接！ ");
+//        super.channelActive(ctx);
+//    }
 }

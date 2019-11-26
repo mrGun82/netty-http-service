@@ -15,6 +15,7 @@ public enum EDResultEnum {
 	ERROR_IO("504","上传文件异常"),
 	ERROR_MOTHODNOTSUPPORT("505","请求方法错误"),
     ERROR_PARAMETER_NOT_MATCH("506","参数不匹配"),
+	ERROR_HTTP_METHOD_NOT_SUPPORTED("507","参数不匹配"),
 
 
 	//参数
