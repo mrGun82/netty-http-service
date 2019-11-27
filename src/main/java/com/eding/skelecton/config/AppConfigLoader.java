@@ -1,15 +1,6 @@
 package com.eding.skelecton.config;
 
-import com.eding.skelecton.action.ActionFactory;
 import lombok.Getter;
-import org.yaml.snakeyaml.Yaml;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * @program:http-service
@@ -21,18 +12,18 @@ public final class AppConfigLoader implements ConfigLoader {
 
     private static AppConfigLoader appConfigLoader = new AppConfigLoader();
     @Getter
-    private ActionConfigLoader actionConfigLoader;
+    private ServerConfigLoader serverConfigLoader;
     @Getter
     private DatabaseConfigLoader databaseConfigLoader;
 
     private AppConfigLoader() throws RuntimeException {
-        actionConfigLoader = new ActionConfigLoader();
+        serverConfigLoader = new ServerConfigLoader();
         databaseConfigLoader = new DatabaseConfigLoader();
     }
 
     @Override
     public void loadConfig() {
-        actionConfigLoader.loadConfig();
+        serverConfigLoader.loadConfig();
         databaseConfigLoader.loadConfig();
     }
 

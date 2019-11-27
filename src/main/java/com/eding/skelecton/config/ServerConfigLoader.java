@@ -11,7 +11,7 @@ import java.util.Objects;
  * @author:jiagang
  * @create 2019-11-26 09:36
  */
-public class ActionConfigLoader extends AbstractConfigLoader implements ConfigLoader {
+public class ServerConfigLoader extends AbstractConfigLoader implements ConfigLoader {
 
     @Getter
     private Integer servicePort;

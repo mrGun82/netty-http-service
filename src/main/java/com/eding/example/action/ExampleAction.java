@@ -54,6 +54,16 @@ public class ExampleAction {
         return Result.ok("insert count ：" + ic);
     }
 
+    @EDAction(action = "update")
+    public Result update(
+            @EDParameter(name = "age") String id,
+            @EDParameter(name = "name") String name,
+            @EDParameter(name = "age") Integer age) throws Exception {
+        TestMapper mapper = SqlSession.getMapper(TestMapper.class);
+        Integer ic = mapper.updateTests(id, name, age);
+        return Result.ok("update count ：" + ic);
+    }
+
     @EDAction(action = "jdbc")
     public Result jdbc() throws SQLException {
         Statement statement = JDBCOperator.getInstance().statement();

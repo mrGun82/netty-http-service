@@ -1,10 +1,7 @@
 package com.eding.example.mapper;
 
 import com.eding.example.model.TestDO;
-import com.eding.skelecton.database.annotations.ExtInsert;
-import com.eding.skelecton.database.annotations.ExtParam;
-import com.eding.skelecton.database.annotations.ExtSelect;
-import com.eding.skelecton.database.annotations.ExtSelectOne;
+import com.eding.skelecton.database.annotations.*;
 
 import java.util.List;
 
@@ -16,11 +13,14 @@ import java.util.List;
  */
 public interface TestMapper {
     @ExtInsert("insert into test(id,name,age) values(#{id},#{name},#{age})")
-    int insertTest(@ExtParam("id") String id, @ExtParam("name") String name, @ExtParam("age") Integer age);
+    Integer insertTest(@ExtParam("id") String id, @ExtParam("name") String name, @ExtParam("age") Integer age);
 
     @ExtSelectOne("select id,name,age from test where id=#{id}")
     TestDO selectTest(@ExtParam("id") String id);
 
     @ExtSelect("select id,name,age from test where name=#{name}")
     List<TestDO> selectTests(@ExtParam("name") String name);
+
+    @ExtUpdate("update test set name=#{name},age=#{age} where id=#{id} ")
+    Integer updateTests(@ExtParam("id") String id,@ExtParam("name") String name,@ExtParam("age") Integer age);
 }

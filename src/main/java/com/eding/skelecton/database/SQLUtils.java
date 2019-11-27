@@ -25,6 +25,16 @@ public class SQLUtils {
         return split;
     }
 
+    public static String[] sqlUpdateParameter(String sql) {
+        sql = (sql.substring(sql.indexOf("set") + ("set".length()))).trim();
+        sql = sql.replace("where", ",").replace(" ", "");
+        String[] ss = sql.split(",");
+        for (int i = 0; i < ss.length; i++) {
+            ss[i] = ss[i].substring(ss[i].indexOf("#{") + 2, ss[i].indexOf("}"));
+        }
+        return ss;
+    }
+
     /**
      * 获取select 后面where语句<br>
      *

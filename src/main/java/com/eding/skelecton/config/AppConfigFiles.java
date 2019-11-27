@@ -4,10 +4,11 @@ import lombok.ToString;
 
 import java.io.File;
 import java.util.*;
+
 @ToString
 public enum AppConfigFiles {
 
-    APPLICATION_EXTERNAL((System.getProperty("user.dir")).substring(0, (System.getProperty("user.dir").lastIndexOf(File.separator))) + "\\config\\application.yml", 1),
+    APPLICATION_EXTERNAL((System.getProperty("user.dir")).substring(0, (System.getProperty("user.dir").lastIndexOf(File.separator))) + File.separator + "config" + File.separator + "application.yml", 1),
     APPLICATION_INTERNAL("application.yml", 2);
 
     private String path;

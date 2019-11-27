@@ -49,10 +49,8 @@ public abstract class ComponentScanner {
         }
     }
 
-    // 抽象方法，由用户自行处理扫描到的类
     public abstract void dealClass(Class<?> clazz) throws Exception;
 
-    // jar包的扫描
     private void parse(URL url) throws Exception {
         Enumeration<JarEntry> jarEntries = ((JarURLConnection) url.openConnection())
                 .getJarFile().entries();
@@ -62,13 +60,11 @@ public abstract class ComponentScanner {
             String jarName = jarEntry.getName();
 
             if (!jarEntry.isDirectory() && jarName.endsWith(".class")) {
-                // 将文件路径名转换为包名称的形式
                 dealClassName(jarName.replace("/", ".").replace(".class", ""));
             }
         }
     }
 
-    // 包扫描
     private void parse(File curFile, String packageName) throws Exception {
         File[] fileList = curFile.listFiles(new FileFilter() {
             @Override
@@ -88,11 +84,9 @@ public abstract class ComponentScanner {
         }
     }
 
-    // class->对象
     private void dealClassName(String className) throws Exception {
         try {
             Class<?> clazz = Class.forName(className);
-            // 注解、接口、枚举、原始类型不处理
             if (!clazz.isAnnotation()
                     && !clazz.isInterface()
                     && !clazz.isEnum()

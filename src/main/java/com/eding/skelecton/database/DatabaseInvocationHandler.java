@@ -1,10 +1,8 @@
 package com.eding.skelecton.database;
 
-import com.eding.skelecton.database.annotations.ExtInsert;
-import com.eding.skelecton.database.annotations.ExtParam;
-import com.eding.skelecton.database.annotations.ExtSelect;
-import com.eding.skelecton.database.annotations.ExtSelectOne;
+import com.eding.skelecton.database.annotations.*;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.*;
 import java.sql.ResultSet;
@@ -19,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author:jiagang
  * @create 2019-11-26 13:46
  */
+@Slf4j
 public class DatabaseInvocationHandler implements InvocationHandler {
 
     private Object subject;
@@ -30,9 +29,9 @@ public class DatabaseInvocationHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        ExtInsert extInsert = method.getAnnotation(ExtInsert.class);
-        if (extInsert != null) {
-            return insertSQL(extInsert, method, args);
+        ExtSelect extSelect = method.getAnnotation(ExtSelect.class);
+        if (extSelect != null) {
+            return select(extSelect, method, args);
         }
 
         ExtSelectOne extSelectOne = method.getAnnotation(ExtSelectOne.class);
@@ -40,14 +39,17 @@ public class DatabaseInvocationHandler implements InvocationHandler {
             return selectOne(extSelectOne, method, args);
         }
 
-        ExtSelect extSelect = method.getAnnotation(ExtSelect.class);
-        if (extSelect != null) {
-            return select(extSelect, method, args);
+        ExtInsert extInsert = method.getAnnotation(ExtInsert.class);
+        if (extInsert != null) {
+            return insertSQL(extInsert, method, args);
         }
 
+        ExtUpdate extUpdate = method.getAnnotation(ExtUpdate.class);
+        if (extUpdate != null) {
+            return updateSQL(extUpdate, method, args);
+        }
         return null;
     }
-
 
     public int insertSQL(ExtInsert extInsert, Method method, Object[] args) throws SQLException {
         String insertSql = extInsert.value();
@@ -64,6 +66,25 @@ public class DatabaseInvocationHandler implements InvocationHandler {
         String newSql = SQLUtils.parameQuestion(insertSql, sqlParameter);
         System.out.println("newSql:" + newSql);
         int insertResult = JDBCOperator.getInstance().insert(newSql, false, parameValues);
+        return insertResult;
+    }
+
+    public int updateSQL(ExtUpdate extUpdate, Method method, Object[] args) throws SQLException {
+        String updateSql = extUpdate.value();
+        System.out.println("sql:" + updateSql);
+        Parameter[] parameters = method.getParameters();
+        ConcurrentHashMap<Object, Object> parameterMap = getExtParams(parameters, args);
+        String[] sqlParameter = SQLUtils.sqlUpdateParameter(updateSql);
+        List<Object> parameValues = Lists.newArrayList();
+        for (int i = 0; i < sqlParameter.length; i++) {
+            String str = sqlParameter[i];
+            Object object = parameterMap.get(str);
+            parameValues.add(object);
+        }
+        String newSql = SQLUtils.parameQuestion(updateSql, sqlParameter);
+        log.info("SQL: "+newSql);
+        log.info("PARAM: "+parameValues);
+        int insertResult = JDBCOperator.getInstance().update(newSql, false, parameValues);
         return insertResult;
     }
 
