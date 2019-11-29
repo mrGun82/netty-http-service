@@ -1,6 +1,6 @@
 package com.eding;
 
-import com.eding.skelecton.AppRunner;
+import com.eding.framework.ServiceRunner;
 
 /**
  * @program:eding-cloud
@@ -10,6 +10,6 @@ import com.eding.skelecton.AppRunner;
  */
 public class Application {
     public static void main(String[] args) throws Exception {
-        AppRunner.run(Application.class);
+        ServiceRunner.run(Application.class);
     }
 }

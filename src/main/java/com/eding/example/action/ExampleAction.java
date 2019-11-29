@@ -1,13 +1,13 @@
 package com.eding.example.action;
 
-import com.eding.annotations.EDAction;
-import com.eding.annotations.EDComponent;
-import com.eding.annotations.EDParameter;
-import com.eding.exceptions.Result;
+import com.eding.framework.annotations.EDAction;
+import com.eding.framework.annotations.EDComponent;
+import com.eding.framework.annotations.EDParameter;
+import com.eding.framework.exceptions.Result;
 import com.eding.example.mapper.TestMapper;
 import com.eding.example.model.TestDO;
-import com.eding.skelecton.database.JDBCOperator;
-import com.eding.skelecton.database.SqlSession;
+import com.eding.framework.database.JDBCOperator;
+import com.eding.framework.database.SqlSession;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

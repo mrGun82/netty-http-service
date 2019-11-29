@@ -1,7 +1,7 @@
 package com.eding.example.mapper;
 
 import com.eding.example.model.TestDO;
-import com.eding.skelecton.database.annotations.*;
+import com.eding.framework.database.annotations.*;
 
 import java.util.List;
 
