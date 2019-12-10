@@ -1,13 +1,13 @@
 package com.eding.framework.http.server;
 
 
-
-import com.eding.framework.exceptions.GlobalExceptionHandler;
-import com.eding.framework.exceptions.HttpMethodNotSupportedException;
-import com.eding.framework.exceptions.Result;
-import com.eding.framework.http.request.EDRequest;
 import com.eding.framework.action.ActionProxy;
 import com.eding.framework.action.ParameterMaker;
+import com.eding.framework.exceptions.GlobalExceptionHandler;
+import com.eding.framework.exceptions.HttpMethodNotSupportedException;
+import com.eding.framework.exceptions.UnauthorizedException;
+import com.eding.framework.http.request.EDRequest;
+import com.eding.framework.model.Result;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -59,6 +59,9 @@ public class HttpServerInboundHandler extends ChannelInboundHandlerAdapter {
 
                 ByteBuf buf = request.content();
                 EDRequest edRequest = gson.fromJson(buf.toString(CharsetUtil.UTF_8), EDRequest.class);
+                if (Objects.isNull(edRequest)) {
+                    throw new UnauthorizedException();
+                }
                 ActionProxy proxy = new ActionProxy();
                 ParameterMaker parameterMaker = new ParameterMaker();
                 Map<String, Object> paramMap = edRequest.getParameter();

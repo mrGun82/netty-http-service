@@ -8,6 +8,7 @@ package com.eding.framework.exceptions;
 public enum EDResultEnum {
 	SUCCESS("200","ok"),
 	FAILED("400","请求失败"),
+	UNAUTHORIZED("401","非法请求"),
 	ERROR("500","不知名错误"),
 	ERROR_NULL("501","空指针异常"),
 	ERROR_CLASS_CAST("502","类型转换异常"),

@@ -34,7 +34,7 @@ public abstract class ComponentScanner {
 
     public void scanPackage(String packageName) throws Exception {
         String packagePath = packageName.replace(".", "/");
-        log.info("scan package path: " + packagePath);
+        log.info("Scanning package path: " + packagePath);
         try {
             Enumeration<URL> resources = Thread.currentThread()
                     .getContextClassLoader()

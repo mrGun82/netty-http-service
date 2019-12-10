@@ -1,4 +1,4 @@
-package com.eding;
+package com.eding.example;
 
 import com.eding.framework.ServiceRunner;
 

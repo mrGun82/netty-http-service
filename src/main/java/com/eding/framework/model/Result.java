@@ -1,4 +1,6 @@
-package com.eding.framework.exceptions;
+package com.eding.framework.model;
+
+import com.eding.framework.exceptions.EDResultEnum;
 
 import java.util.HashMap;
 import java.util.Map;

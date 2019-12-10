@@ -1,5 +1,7 @@
 package com.eding.framework.exceptions;
 
+import com.eding.framework.model.Result;
+
 import java.io.IOException;
 
 public class GlobalExceptionHandler {
@@ -18,6 +20,8 @@ public class GlobalExceptionHandler {
             return Result.error(EDResultEnum.ERROR_HTTP_METHOD_NOT_SUPPORTED);
         } else if (ex instanceof MethodParameterNotMatchException) {
             return Result.error(EDResultEnum.ERROR_PARAMETER_NOT_MATCH);
+        } else if (ex instanceof UnauthorizedException) {
+            return Result.error(EDResultEnum.UNAUTHORIZED);
         } else if (ex instanceof RuntimeException) {
             return Result.error(EDResultEnum.ERROR_RUNTION);
         }

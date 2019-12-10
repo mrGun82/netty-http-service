@@ -34,7 +34,6 @@ public abstract class AbstractConfigLoader {
             return;
         }
         loadConfigFile();
-
     }
 
     private void loadConfigFile() {
@@ -44,7 +43,6 @@ public abstract class AbstractConfigLoader {
         yaml = new Yaml();
         List<AppConfigFiles> configFiles = AppConfigFiles.getConfigFiles();
         for (AppConfigFiles cf : configFiles) {
-            log.info("load confile file: " + cf);
             InputStream in = null;
             File f = new File(cf.getPath());
             if (f.exists()) {
@@ -53,8 +51,10 @@ public abstract class AbstractConfigLoader {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+                log.info("load config from file: " + cf.getPath());
             } else {
-                in = loader.getResourceAsStream(cf.getPath());
+                in = loader.getResourceAsStream(File.separator + cf.getPath());
+                log.info("load config from resource: " + cf.getPath());
             }
             if (Objects.nonNull(in)) {
                 appConfig = yaml.loadAs(in, AppConfig.class);

@@ -1,18 +1,23 @@
 package com.eding.example.action;
 
+import com.eding.example.mapper.TestMapper;
+import com.eding.example.model.TestDO;
 import com.eding.framework.annotations.EDAction;
 import com.eding.framework.annotations.EDComponent;
 import com.eding.framework.annotations.EDParameter;
-import com.eding.framework.exceptions.Result;
-import com.eding.example.mapper.TestMapper;
-import com.eding.example.model.TestDO;
+import com.eding.framework.database.DBUtils;
 import com.eding.framework.database.JDBCOperator;
 import com.eding.framework.database.SqlSession;
+import com.eding.framework.model.Result;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -66,12 +71,23 @@ public class ExampleAction {
 
     @EDAction(action = "jdbc")
     public Result jdbc() throws SQLException {
+
         Statement statement = JDBCOperator.getInstance().statement();
         ResultSet rs = statement.executeQuery("select * from test ");
-        StringBuilder resultStr = new StringBuilder();
+        List l = Lists.newArrayList();
         while (rs.next()) {
-            resultStr.append("rs.getString(1): " + rs);
+            Map<String, Object> m = Maps.newHashMap();
+            m.put("id", rs.getString("id"));
+            m.put("name", rs.getString("name"));
+            m.put("age", rs.getString("age"));
+            l.add(m);
         }
-        return Result.ok(resultStr.toString());
+        return Result.ok(l);
+    }
+
+    @EDAction(action = "dbutils")
+    public Result dbutils() {
+        List<TestDO> list = DBUtils.findByCondition("test", "1=1", new BeanListHandler<TestDO>(TestDO.class));
+        return Result.ok(list);
     }
 }
